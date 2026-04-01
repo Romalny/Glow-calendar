@@ -6,61 +6,142 @@
 <title>Glow Calendar</title>
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <style>
-  html,body{background:#0a0a0a;margin:0;padding:0;min-height:100vh;font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display',system-ui,sans-serif;}
-  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
-  .wrap{padding-top:max(env(safe-area-inset-top,16px),28px);padding-bottom:env(safe-area-inset-bottom,16px);display:flex;flex-direction:column;align-items:center;gap:8px;}
-  .cal-card{background:#0e0e0e;border-radius:18px;padding:1.25rem 1.1rem;width:calc(100% - 24px);max-width:420px;}
-  .nav{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.1rem;}
-  .nav button{background:none;border:0.5px solid #252525;color:#555;border-radius:8px;padding:6px 14px;font-size:16px;line-height:1;cursor:pointer;}
-  .nav span{font-size:13px;font-weight:500;color:#888;letter-spacing:.05em;}
-  .dow-row{display:grid;grid-template-columns:repeat(7,1fr);margin-bottom:8px;}
-  .dow-row div{font-size:9px;color:#2e2e2e;text-align:center;padding-bottom:3px;}
-  .cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;}
-  .day-cell{display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;padding:5px 0;}
-  .dot{border-radius:50%;margin:auto;transition:all .25s;}
-  .day-num{font-size:9px;color:#2a2a2a;text-align:center;}
-  .today .day-num{color:#555;}
-  .panel{display:none;width:calc(100% - 24px);max-width:420px;background:#0e0e0e;border-radius:14px;border:0.5px solid #1c1c1c;padding:1.1rem 1.15rem;}
-  .ph{display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;}
-  .pdate{font-size:12px;color:#666;}
-  .xbtn{background:none;border:none;color:#3a3a3a;font-size:18px;line-height:1;cursor:pointer;padding:2px 6px;}
-  .slbl{font-size:10px;color:#383838;letter-spacing:.07em;text-transform:uppercase;margin-bottom:8px;}
-  .dial-wrap{display:flex;flex-direction:column;align-items:center;margin-bottom:4px;}
-  #dsv{width:100%;max-width:280px;touch-action:none;display:block;}
-  .dlbl{font-size:11px;color:#444;text-align:center;margin-top:4px;height:16px;letter-spacing:.04em;}
-  .divider{height:0.5px;background:#1a1a1a;margin:1rem 0;}
-  .notes-list{margin-bottom:10px;display:flex;flex-direction:column;gap:5px;}
-  .nr{display:flex;align-items:flex-start;gap:8px;padding:7px 9px;background:#141414;border-radius:8px;}
-  .nd{width:5px;height:5px;border-radius:50%;flex-shrink:0;margin-top:5px;}
-  .nt{flex:1;font-size:13px;color:#777;line-height:1.5;}
-  .ndel{background:none;border:none;color:#2a2a2a;font-size:16px;padding:0 2px;line-height:1;cursor:pointer;}
-  .nempty{font-size:12px;color:#2a2a2a;padding:4px 0;}
-  .add-row{display:flex;gap:7px;}
-  .add-row input{flex:1;background:#141414;border:0.5px solid #1e1e1e;color:#ccc;border-radius:8px;padding:9px 11px;font-size:13px;outline:none;font-family:inherit;}
-  .add-row input::placeholder{color:#2e2e2e;}
-  .add-row input:focus{border-color:#2a2a2a;}
-  .abtn{background:#1e1e1e;border:none;color:#888;border-radius:8px;padding:9px 16px;font-size:17px;font-weight:500;cursor:pointer;}
-
-  /* how it works */
-  .hint-btn{background:none;border:none;color:#2e2e2e;font-size:11px;cursor:pointer;padding:4px 0;letter-spacing:.03em;display:block;margin:4px auto 0;text-align:center;}
-  .hint-btn:hover{color:#444;}
-  .hint-panel{display:none;width:calc(100% - 24px);max-width:420px;background:#0e0e0e;border-radius:12px;border:0.5px solid #1a1a1a;padding:.9rem 1.1rem;}
-  .hint-panel.open{display:block;}
-  .hint-row{display:flex;align-items:center;gap:10px;padding:5px 0;}
-  .hint-dot{border-radius:50%;flex-shrink:0;}
-  .hint-txt{font-size:12px;color:#444;line-height:1.4;}
+:root{
+  --bg:#0a0a0a;--card:#0e0e0e;--card2:#141414;--bd:#1c1c1c;--bd2:#252525;
+  --t1:#888;--t2:#666;--t3:#3a3a3a;--t4:#2e2e2e;--item:#1e1e1e;--dn:#2a2a2a;--dt:#555;
+}
+html.light{
+  --bg:#f0efe9;--card:#fff;--card2:#f5f4ef;--bd:#e0dfd8;--bd2:#cccbc4;
+  --t1:#555;--t2:#777;--t3:#aaa;--t4:#bbb;--item:#ebe9e1;--dn:#bbb;--dt:#444;
+}
+html,body{background:var(--bg);margin:0;padding:0;min-height:100vh;
+  font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display',system-ui,sans-serif;
+  transition:background .25s;}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+.app{display:flex;flex-direction:column;min-height:100vh;}
+.view{display:none;flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding-bottom:74px;}
+.view.active{display:block;}
+.sa{padding:max(env(safe-area-inset-top,16px),24px) 12px 0;
+    display:flex;flex-direction:column;align-items:center;gap:8px;}
+/* tab bar */
+.tbar{position:fixed;bottom:0;left:0;right:0;
+  height:calc(56px + env(safe-area-inset-bottom,0px));
+  background:var(--card);border-top:0.5px solid var(--bd);
+  display:flex;z-index:100;padding-bottom:env(safe-area-inset-bottom,0px);}
+.tab{flex:1;background:none;border:none;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:3px;cursor:pointer;color:var(--t3);}
+.tab.active{color:var(--t1);}
+.ti{font-size:18px;line-height:1;}.tl{font-size:10px;letter-spacing:.03em;}
+/* calendar */
+.ccard{background:var(--card);border-radius:18px;padding:1.25rem 1.1rem;width:100%;max-width:420px;}
+.nav{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.1rem;}
+.nl2,.nr2{display:flex;align-items:center;gap:6px;}
+.nbtn{background:none;border:0.5px solid var(--bd2);color:var(--t2);
+  border-radius:8px;padding:6px 14px;font-size:16px;line-height:1;cursor:pointer;}
+.thbtn{background:none;border:0.5px solid var(--bd2);color:var(--t3);
+  border-radius:8px;padding:5px 10px;font-size:14px;line-height:1;cursor:pointer;}
+.nmid{font-size:13px;font-weight:500;color:var(--t1);letter-spacing:.05em;}
+.drow{display:grid;grid-template-columns:repeat(7,1fr);margin-bottom:8px;}
+.drow div{font-size:9px;color:var(--t4);text-align:center;padding-bottom:3px;}
+.cgrid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;}
+.dc{display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;padding:5px 0;}
+.dot{border-radius:50%;margin:auto;transition:all .25s;}
+.dn{font-size:9px;color:var(--dn);text-align:center;}
+.today .dn{color:var(--dt);}
+/* day panel */
+.panel{display:none;width:100%;max-width:420px;background:var(--card);
+  border-radius:14px;border:0.5px solid var(--bd);padding:1.1rem 1.15rem;}
+.ph{display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;}
+.pdate{font-size:12px;color:var(--t2);}
+.xbtn{background:none;border:none;color:var(--t3);font-size:18px;line-height:1;cursor:pointer;padding:2px 6px;}
+.slbl{font-size:10px;color:var(--t3);letter-spacing:.07em;text-transform:uppercase;margin-bottom:8px;}
+.dwrap{display:flex;flex-direction:column;align-items:center;margin-bottom:4px;}
+.dbg{background:#0e0e0e;border-radius:12px;padding:6px 4px 2px;}
+#dsv{width:100%;max-width:290px;touch-action:none;display:block;cursor:grab;}
+#dsv:active{cursor:grabbing;}
+.dlbl{font-size:11px;color:var(--t3);text-align:center;margin-top:6px;height:16px;letter-spacing:.04em;}
+.divl{height:0.5px;background:var(--bd);margin:1rem 0;}
+.nlist{margin-bottom:10px;display:flex;flex-direction:column;gap:5px;}
+.nr{display:flex;align-items:flex-start;gap:8px;padding:7px 9px;background:var(--card2);border-radius:8px;}
+.ndo{width:5px;height:5px;border-radius:50%;flex-shrink:0;margin-top:5px;}
+.nt{flex:1;font-size:13px;color:var(--t2);line-height:1.5;}
+.ndel{background:none;border:none;color:var(--t4);font-size:16px;padding:0 2px;line-height:1;cursor:pointer;}
+.nem{font-size:12px;color:var(--t4);padding:4px 0;}
+.arow{display:flex;gap:7px;}
+.arow input{flex:1;background:var(--card2);border:0.5px solid var(--bd);color:var(--t1);
+  border-radius:8px;padding:9px 11px;font-size:13px;outline:none;font-family:inherit;}
+.arow input::placeholder{color:var(--t4);}
+.abtn{background:var(--item);border:none;color:var(--t2);border-radius:8px;
+  padding:9px 16px;font-size:17px;font-weight:500;cursor:pointer;}
+/* hint */
+.hbtn{background:none;border:none;color:var(--t4);font-size:11px;cursor:pointer;
+  padding:4px 0;letter-spacing:.03em;display:block;margin:0 auto;text-align:center;}
+.hpanel{display:none;width:100%;max-width:420px;background:var(--card);
+  border-radius:12px;border:0.5px solid var(--bd);padding:.9rem 1.1rem;}
+.hpanel.open{display:block;}
+.hrow{display:flex;align-items:center;gap:10px;padding:5px 0;}
+.hdot{border-radius:50%;flex-shrink:0;}
+.htxt{font-size:12px;color:var(--t3);line-height:1.4;}
+/* todo */
+.tsec{width:100%;max-width:420px;background:var(--card);
+  border-radius:14px;border:0.5px solid var(--bd);overflow:hidden;transition:border-color .15s;}
+.tsec.dov{border-color:rgba(255,255,255,.3);}
+html.light .tsec.dov{border-color:rgba(0,0,0,.25);}
+.sh2{display:flex;align-items:center;justify-content:space-between;padding:.75rem 1rem .5rem;}
+.st2{font-size:11px;font-weight:500;color:var(--t2);letter-spacing:.06em;text-transform:uppercase;}
+.sc2{font-size:10px;color:var(--t4);}
+.sl2{min-height:4px;}
+.ti2{display:flex;align-items:flex-start;gap:10px;padding:9px 12px;
+  border-top:0.5px solid var(--bd);user-select:none;-webkit-user-select:none;transition:opacity .15s;}
+.ti2.da{opacity:.3;}
+.chk{width:16px;height:16px;border-radius:50%;border:1px solid var(--t4);flex-shrink:0;
+  margin-top:2px;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .15s;}
+.ti2.done .chk{background:var(--t3);border-color:var(--t3);}
+.ti2.done .chk::after{content:'';width:5px;height:3px;
+  border-left:1.5px solid var(--bg);border-bottom:1.5px solid var(--bg);
+  transform:rotate(-45deg) translateY(-1px);display:block;}
+.tw{flex:1;min-width:0;}
+.tt2{font-size:13px;color:var(--t2);line-height:1.45;}
+.ti2.done .tt2{color:var(--t4);text-decoration:line-through;}
+.td2{font-size:10px;color:var(--t4);margin-top:2px;}
+.tdel{background:none;border:none;color:var(--t4);font-size:15px;padding:0 2px;line-height:1;cursor:pointer;}
+.tadd{display:flex;gap:7px;padding:.7rem 1rem;border-top:0.5px solid var(--bd);align-items:center;}
+.tadd input[type=text]{flex:1;background:none;border:none;color:var(--t1);
+  font-size:13px;outline:none;font-family:inherit;min-width:0;}
+.tadd input[type=text]::placeholder{color:var(--t4);}
+.tadd input[type=date]{background:none;border:none;color:var(--t3);font-size:11px;
+  outline:none;font-family:inherit;min-width:0;max-width:95px;color-scheme:dark;}
+html.light .tadd input[type=date]{color-scheme:light;}
+.tpb{background:none;border:none;color:var(--t2);font-size:20px;cursor:pointer;padding:0 2px;line-height:1;flex-shrink:0;}
+.sbar{width:100%;max-width:420px;background:var(--card);border-radius:12px;
+  border:0.5px solid var(--bd);padding:.7rem 1rem;display:flex;align-items:center;
+  justify-content:space-between;gap:12px;}
+.stx{font-size:12px;color:var(--t2);flex:1;}
+.sbtn{background:var(--item);border:none;color:var(--t1);border-radius:8px;
+  padding:5px 12px;font-size:11px;cursor:pointer;white-space:nowrap;}
+.ghost{position:fixed;pointer-events:none;z-index:9999;background:var(--card);
+  border-radius:10px;border:0.5px solid var(--bd2);padding:8px 12px;font-size:13px;
+  color:var(--t1);box-shadow:0 8px 24px rgba(0,0,0,.5);max-width:280px;
+  transform:rotate(1.5deg) scale(1.02);opacity:.92;}
 </style>
 </head>
 <body>
-<div class="wrap">
-  <div class="cal-card">
+<div class="app">
+
+<!-- Calendar view -->
+<div class="view active" id="vcal">
+<div class="sa">
+  <div class="ccard">
     <div class="nav">
-      <button id="pb">‹</button>
-      <span id="ml"></span>
-      <button id="nb">›</button>
+      <div class="nl2"><button class="nbtn" id="pb">‹</button></div>
+      <span class="nmid" id="ml"></span>
+      <div class="nr2">
+        <button class="thbtn" id="thbtn">☽</button>
+        <button class="nbtn" id="nb">›</button>
+      </div>
     </div>
-    <div class="dow-row" id="dwr"></div>
-    <div class="cal-grid" id="cgr"></div>
+    <div class="drow" id="dwr"></div>
+    <div class="cgrid" id="cgr"></div>
   </div>
 
   <div class="panel" id="dp">
@@ -69,200 +150,287 @@
       <button class="xbtn" id="xb">×</button>
     </div>
     <div class="slbl">свечение дня</div>
-    <div class="dial-wrap">
-      <svg id="dsv" viewBox="0 0 280 165">
-        <line x1="140" y1="10" x2="140" y2="25" stroke="rgba(255,255,255,0.5)" stroke-width="1.5" stroke-linecap="round"/>
-        <circle cx="140" cy="29" r="1.5" fill="rgba(255,255,255,0.25)"/>
-        <g id="dg"></g>
-      </svg>
+    <div class="dwrap">
+      <div class="dbg">
+        <svg id="dsv" overflow="hidden" viewBox="0 0 290 165">
+          <line x1="145" y1="6" x2="145" y2="22" stroke="rgba(255,255,255,.55)" stroke-width="1.5" stroke-linecap="round"/>
+          <circle cx="145" cy="26" r="1.5" fill="rgba(255,255,255,.3)"/>
+          <g id="dg"></g>
+        </svg>
+      </div>
       <div class="dlbl" id="dlbl"></div>
     </div>
-    <div class="divider"></div>
+    <div class="divl"></div>
     <div class="slbl">заметки</div>
-    <div class="notes-list" id="nl"></div>
-    <div class="add-row">
+    <div class="nlist" id="nl"></div>
+    <div class="arow">
       <input id="ni" type="text" maxlength="140" placeholder="Что сделано сегодня?"/>
       <button class="abtn" id="ab">+</button>
     </div>
   </div>
 
-  <button class="hint-btn" id="hint-btn">как это работает?</button>
-  <div class="hint-panel" id="hint-panel">
-    <div class="hint-row"><div class="hint-dot" style="width:7px;height:7px;background:#1c1c1c;"></div><span class="hint-txt">нет свечения — день прошёл незаметно</span></div>
-    <div class="hint-row"><div class="hint-dot" style="width:7px;height:7px;background:rgba(255,255,255,0.35);box-shadow:0 0 6px 2px rgba(255,255,255,0.18);"></div><span class="hint-txt">слабое белое — что-то небольшое сделано</span></div>
-    <div class="hint-row"><div class="hint-dot" style="width:7px;height:7px;background:rgba(255,255,255,0.68);box-shadow:0 0 9px 3px rgba(255,255,255,0.35);"></div><span class="hint-txt">среднее белое — хороший продуктивный день</span></div>
-    <div class="hint-row"><div class="hint-dot" style="width:7px;height:7px;background:rgba(255,255,255,0.97);box-shadow:0 0 13px 5px rgba(255,255,255,0.6);"></div><span class="hint-txt">яркое белое — сильный, насыщенный день</span></div>
-    <div class="hint-row"><div class="hint-dot" style="width:7px;height:7px;background:rgb(255,240,190);box-shadow:0 0 14px 5px rgba(255,230,150,0.75);"></div><span class="hint-txt">белое с золотом — выдающийся день, запомнится</span></div>
+  <button class="hbtn" id="hbtn">как это работает?</button>
+  <div class="hpanel" id="hpanel">
+    <div class="hrow"><div class="hdot" style="width:7px;height:7px;background:#1c1c1c"></div><span class="htxt">нет — день прошёл незаметно</span></div>
+    <div class="hrow"><div class="hdot" style="width:7px;height:7px;background:rgba(255,255,255,.35);box-shadow:0 0 6px 2px rgba(255,255,255,.18)"></div><span class="htxt">слабое — что-то небольшое сделано</span></div>
+    <div class="hrow"><div class="hdot" style="width:7px;height:7px;background:rgba(255,255,255,.68);box-shadow:0 0 9px 3px rgba(255,255,255,.35)"></div><span class="htxt">среднее — хороший продуктивный день</span></div>
+    <div class="hrow"><div class="hdot" style="width:7px;height:7px;background:rgba(255,255,255,.97);box-shadow:0 0 13px 5px rgba(255,255,255,.6)"></div><span class="htxt">яркое — сильный, насыщенный день</span></div>
+    <div class="hrow"><div class="hdot" style="width:7px;height:7px;background:rgb(255,240,190);box-shadow:0 0 14px 5px rgba(255,230,150,.75)"></div><span class="htxt">золото — выдающийся день, запомнится</span></div>
   </div>
+</div>
+</div>
+
+<!-- Todo view -->
+<div class="view" id="vtodo">
+<div class="sa">
+  <div class="tsec" id="sec-today" data-sec="today">
+    <div class="sh2"><span class="st2">Сегодня</span><span class="sc2" id="ct"></span></div>
+    <div class="sl2" id="lt"></div>
+    <div class="tadd">
+      <input type="text" id="ait" placeholder="Задача на сегодня…" maxlength="140"/>
+      <button class="tpb" data-sec="today">+</button>
+    </div>
+  </div>
+  <div class="tsec" id="sec-tomorrow" data-sec="tomorrow">
+    <div class="sh2"><span class="st2">Завтра</span><span class="sc2" id="ctm"></span></div>
+    <div class="sl2" id="ltm"></div>
+    <div class="tadd">
+      <input type="text" id="aitm" placeholder="Задача на завтра…" maxlength="140"/>
+      <button class="tpb" data-sec="tomorrow">+</button>
+    </div>
+  </div>
+  <div class="tsec" id="sec-later" data-sec="later">
+    <div class="sh2"><span class="st2">Позже</span><span class="sc2" id="cl"></span></div>
+    <div class="sl2" id="ll"></div>
+    <div class="tadd">
+      <input type="text" id="ail" placeholder="Задача…" maxlength="140"/>
+      <input type="date" id="datl"/>
+      <button class="tpb" data-sec="later">+</button>
+    </div>
+  </div>
+  <div class="sbar" id="sbar" style="display:none">
+    <span class="stx" id="stx"></span>
+    <button class="sbtn" id="sbtn">Обновить свечение →</button>
+  </div>
+</div>
+</div>
+
+<!-- Tab bar -->
+<div class="tbar">
+  <button class="tab active" id="tab-cal"><div class="ti">◌</div><div class="tl">Дни</div></button>
+  <button class="tab" id="tab-todo"><div class="ti">≡</div><div class="tl">Задачи</div></button>
+</div>
 </div>
 
 <script>
+// ── Telegram ──────────────────────────────────────────────────────────────────
 const tg=window.Telegram?.WebApp;
 tg?.expand();
-tg?.setHeaderColor('#0a0a0a');
-tg?.setBackgroundColor('#0a0a0a');
-const haptic=tg?.HapticFeedback;
-const cloud=tg?.CloudStorage;
+tg?.disableVerticalSwipes?.();
+const H=tg?.HapticFeedback,CS=tg?.CloudStorage;
+const hTick=()=>H?H.selectionChanged():navigator.vibrate?.(6);
+const hSnap=()=>H?H.impactOccurred('medium'):navigator.vibrate?.([5,20,5]);
+const hNote=()=>H?H.notificationOccurred('success'):navigator.vibrate?.(8);
+const hTap=()=>H?H.impactOccurred('light'):navigator.vibrate?.(4);
 
+// ── Constants ─────────────────────────────────────────────────────────────────
 const MN=['Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'];
 const DS=['Пн','Вт','Ср','Чт','Пт','Сб','Вс'];
 const DN=['воскресенье','понедельник','вторник','среда','четверг','пятница','суббота'];
-
-const LV=[
-  {l:'нет свечения',        bg:'#1c1c1c',                 sh:'none',                                    sz:'5px'},
-  {l:'слабое белое',        bg:'rgba(255,255,255,0.35)',   sh:'0 0 7px 2px rgba(255,255,255,0.2)',       sz:'6px'},
-  {l:'среднее белое',       bg:'rgba(255,255,255,0.68)',   sh:'0 0 11px 4px rgba(255,255,255,0.4)',      sz:'7px'},
-  {l:'яркое белое',         bg:'rgba(255,255,255,0.97)',   sh:'0 0 16px 6px rgba(255,255,255,0.65)',     sz:'8px'},
-  {l:'белое с золотом',     bg:'rgb(255,240,185)',          sh:'0 0 18px 7px rgba(255,225,130,0.8)',     sz:'8px'},
+const LV_D=[
+  {l:'нет свечения',bg:'#1c1c1c',sh:'none',sz:'5px'},
+  {l:'слабое белое',bg:'rgba(255,255,255,.35)',sh:'0 0 7px 2px rgba(255,255,255,.2)',sz:'6px'},
+  {l:'среднее белое',bg:'rgba(255,255,255,.68)',sh:'0 0 11px 4px rgba(255,255,255,.4)',sz:'7px'},
+  {l:'яркое белое',bg:'rgba(255,255,255,.97)',sh:'0 0 16px 6px rgba(255,255,255,.65)',sz:'8px'},
+  {l:'белое с золотом',bg:'rgb(255,240,185)',sh:'0 0 18px 7px rgba(255,225,130,.8)',sz:'8px'},
 ];
+const LV_L=[
+  {l:'нет свечения',bg:'#d0d0d0',sh:'none',sz:'5px'},
+  {l:'слабое',bg:'#999',sh:'0 0 4px 1px rgba(0,0,0,.2)',sz:'6px'},
+  {l:'среднее',bg:'#555',sh:'0 0 6px 2px rgba(0,0,0,.3)',sz:'7px'},
+  {l:'яркое',bg:'#111',sh:'0 0 8px 3px rgba(0,0,0,.45)',sz:'8px'},
+  {l:'с золотом',bg:'#b8860b',sh:'0 0 10px 4px rgba(184,134,11,.5)',sz:'8px'},
+];
+const LV=()=>document.documentElement.classList.contains('light')?LV_L:LV_D;
 
-// 5 items on the arc
-const CX=140,CY=155,R=115;
+// ── State ─────────────────────────────────────────────────────────────────────
+let db={},todos=[],theme='dark';
+let cy=new Date().getFullYear(),cm=new Date().getMonth(),sel=null;
+
+// ── Storage ───────────────────────────────────────────────────────────────────
+const SK={c:'gcv4',t:'gctos',th:'gcthm'};
+const persist=(k,v)=>{
+  const s=typeof v==='string'?v:JSON.stringify(v);
+  if(CS)CS.setItem(k,s,()=>{});
+  else try{localStorage.setItem(k,s);}catch(_){}
+};
+async function loadAll(){
+  return new Promise(r=>{
+    if(CS&&CS.getItems){
+      CS.getItems(Object.values(SK),(e,v)=>{
+        if(!e&&v){
+          try{if(v[SK.c])db=JSON.parse(v[SK.c]);}catch(_){}
+          try{if(v[SK.t])todos=JSON.parse(v[SK.t]);}catch(_){}
+          try{if(v[SK.th])theme=v[SK.th];}catch(_){}
+        }r();
+      });
+    } else if(CS){
+      let n=3; const d=()=>{if(!--n)r();};
+      CS.getItem(SK.c,(e,v)=>{try{if(v)db=JSON.parse(v);}catch(_){}d();});
+      CS.getItem(SK.t,(e,v)=>{try{if(v)todos=JSON.parse(v);}catch(_){}d();});
+      CS.getItem(SK.th,(e,v)=>{try{if(v)theme=v;}catch(_){}d();});
+    } else {
+      ['c','t','th'].forEach(k=>{try{const v=localStorage.getItem(SK[k]);if(!v)return;
+        k==='c'?db=JSON.parse(v):k==='t'?todos=JSON.parse(v):theme=v;}catch(_){}});
+      r();
+    }
+  });
+}
+
+// ── Theme ─────────────────────────────────────────────────────────────────────
+function applyTheme(save){
+  const l=theme==='light';
+  document.documentElement.classList.toggle('light',l);
+  document.getElementById('thbtn').textContent=l?'○':'☽';
+  const bg=l?'#f0efe9':'#0a0a0a';
+  tg?.setHeaderColor?.(bg);tg?.setBackgroundColor?.(bg);
+  buildDial();render();
+  if(save)persist(SK.th,theme);
+}
+document.getElementById('thbtn').addEventListener('click',()=>{
+  theme=theme==='dark'?'light':'dark';applyTheme(true);hTap();
+});
+
+// ── Dial (arc-based rotation via atan2) ───────────────────────────────────────
+const CX=145,CY=152,R=114;
 const IA=[205,237,270,303,335];
 const SN=[65,33,0,-33,-65];
-
-const IF_=['#0a0a0a','#141414','#252525','#3a3a3a','#3c2e06'];
-const IS_=['#1e1e1e','#2a2a2a','#777','#ccc','#966e18'];
-const IIR=[2.2,2.8,3.8,4.5,4.5];
-const IIF=['#1e1e1e','rgba(255,255,255,0.18)','rgba(255,255,255,0.6)','rgba(255,255,255,0.97)','rgb(255,212,90)'];
-
-let db={},cy=new Date().getFullYear(),cm=new Date().getMonth(),sel=null;
-let da=SN[0],drag=false,dsx=0,dsa=0,lhi=0;
-
-const key=(y,m,d)=>`${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-const dd2=k=>{if(!db[k])db[k]={glow:0,notes:[]};return db[k];};
-const hTick=()=>haptic?haptic.selectionChanged():navigator.vibrate?.(6);
-const hSnap=()=>haptic?haptic.impactOccurred('medium'):navigator.vibrate?.([5,20,5]);
-const hNote=()=>haptic?haptic.notificationOccurred('success'):navigator.vibrate?.(8);
-const hTap=()=>haptic?haptic.impactOccurred('light'):navigator.vibrate?.(4);
-
-const STORE_KEY='glowcal_v2';
-async function loadData(){return new Promise(r=>{if(cloud){cloud.getItem(STORE_KEY,(e,v)=>{if(!e&&v)try{db=JSON.parse(v);}catch(x){}r();});}else{try{const v=localStorage.getItem(STORE_KEY);if(v)db=JSON.parse(v);}catch(x){}r();}});}
-async function saveData(){const s=JSON.stringify(db);if(cloud)cloud.setItem(STORE_KEY,s,()=>{});else try{localStorage.setItem(STORE_KEY,s);}catch(x){}}
-
+let da=SN[0],dDrag=false,dSA=0,dSda=0,dLi=0;
 const p2c=(a,r=R)=>({x:CX+r*Math.cos(a*Math.PI/180),y:CY+r*Math.sin(a*Math.PI/180)});
+const DC={arc:'#1e1e1e',tm:'#2e2e2e',tn:'#191919',
+  IF:['#0a0a0a','#141414','#252525','#3a3a3a','#3c2e06'],
+  IS:['#1e1e1e','#2a2a2a','#777','#ccc','#966e18'],
+  IR:[2.2,2.8,3.8,4.5,4.5],
+  II:['#1e1e1e','rgba(255,255,255,.18)','rgba(255,255,255,.6)','rgba(255,255,255,.97)','rgb(255,212,90)']};
 
 function buildDial(){
-  const g=document.getElementById('dg');let h='';
-  h+=`<path d="M ${CX-R} ${CY} A ${R} ${R} 0 0 1 ${CX+R} ${CY}" fill="none" stroke="#1e1e1e" stroke-width="1"/>`;
+  const g=document.getElementById('dg');if(!g)return;
+  let h=`<path d="M${CX-R} ${CY} A${R} ${R} 0 0 1 ${CX+R} ${CY}" fill="none" stroke="${DC.arc}" stroke-width="1"/>`;
   for(let a=186;a<=354;a+=4){
     if(IA.some(ia=>Math.abs(ia-a)<9))continue;
-    const lg=a%20===0,len=lg?11:5;
-    const o=p2c(a),i2=p2c(a,R-len);
-    h+=`<line x1="${o.x.toFixed(1)}" y1="${o.y.toFixed(1)}" x2="${i2.x.toFixed(1)}" y2="${i2.y.toFixed(1)}" stroke="${lg?'#2e2e2e':'#191919'}" stroke-width="${lg?1:.6}"/>`;
+    const lg=a%20===0,len=lg?11:5,o=p2c(a),i2=p2c(a,R-len);
+    h+=`<line x1="${o.x.toFixed(1)}" y1="${o.y.toFixed(1)}" x2="${i2.x.toFixed(1)}" y2="${i2.y.toFixed(1)}" stroke="${lg?DC.tm:DC.tn}" stroke-width="${lg?1:.6}"/>`;
   }
-  IA.forEach((a,i)=>{
-    const{x,y}=p2c(a);
-    h+=`<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="13" fill="${IF_[i]}" stroke="${IS_[i]}" stroke-width=".75"/>`;
-    h+=`<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${IIR[i]}" fill="${IIF[i]}"/>`;
+  IA.forEach((a,i)=>{const{x,y}=p2c(a);
+    h+=`<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="13" fill="${DC.IF[i]}" stroke="${DC.IS[i]}" stroke-width=".75"/>`;
+    h+=`<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${DC.IR[i]}" fill="${DC.II[i]}"/>`;
   });
   g.innerHTML=h;
 }
-
-function getNI(a){let b=0,bd=1e9;SN.forEach((s,i)=>{const d=Math.abs(s-a);d<bd&&(bd=d,b=i);});return b;}
-
+const getNI=a=>{let b=0,bd=1e9;SN.forEach((s,i)=>{const d=Math.abs(s-a);d<bd&&(bd=d,b=i);});return b;};
 function applyDial(a,anim){
-  const g=document.getElementById('dg');
+  const g=document.getElementById('dg');if(!g)return;
+  g.style.transformBox='view-box';
   g.style.transformOrigin=`${CX}px ${CY}px`;
   g.style.transition=anim?'transform .2s cubic-bezier(.25,.8,.25,1)':'none';
   g.style.transform=`rotate(${a}deg)`;
-  document.getElementById('dlbl').textContent=LV[getNI(a)].l;
+  document.getElementById('dlbl').textContent=LV_D[getNI(a)].l;
 }
-
 async function snapDial(anim){
   const i=getNI(da);da=SN[i];applyDial(da,anim);hSnap();
-  if(sel){dd2(sel).glow=i;await saveData();render();renderNotes();}
+  if(sel){dget(sel).glow=i;persist(SK.c,db);render();renderNotes();}
 }
-
+// arc-based pointer: compute angle from pointer position to dial centre
+function svgPt(e,sv){
+  const r=sv.getBoundingClientRect();
+  return{x:(e.clientX-r.left)*(290/r.width),y:(e.clientY-r.top)*(165/r.height)};
+}
 function initDial(){
   buildDial();applyDial(da,false);
   const sv=document.getElementById('dsv');
-  sv.addEventListener('pointerdown',e=>{drag=true;dsx=e.clientX;dsa=da;lhi=getNI(da);sv.setPointerCapture(e.pointerId);e.preventDefault();});
+  sv.addEventListener('pointerdown',e=>{
+    dDrag=true;const pt=svgPt(e,sv);
+    dSA=Math.atan2(pt.y-CY,pt.x-CX)*180/Math.PI;
+    dSda=da;dLi=getNI(da);sv.setPointerCapture(e.pointerId);e.preventDefault();
+  },{passive:false});
   sv.addEventListener('pointermove',e=>{
-    if(!drag)return;
-    da=Math.max(-78,Math.min(78,dsa+(e.clientX-dsx)*.6));
-    applyDial(da,false);
-    const ni=getNI(da);if(ni!==lhi){lhi=ni;hTick();}
+    if(!dDrag)return;
+    const pt=svgPt(e,sv);
+    let ang=Math.atan2(pt.y-CY,pt.x-CX)*180/Math.PI;
+    let delta=ang-dSA;
+    if(delta>180)delta-=360;if(delta<-180)delta+=360;
+    da=Math.max(-78,Math.min(78,dSda+delta));applyDial(da,false);
+    const ni=getNI(da);if(ni!==dLi){dLi=ni;hTick();}
   });
-  const end=async()=>{if(!drag)return;drag=false;await snapDial(true);};
+  const end=async()=>{if(!dDrag)return;dDrag=false;await snapDial(true);};
   sv.addEventListener('pointerup',end);sv.addEventListener('pointercancel',end);
 }
 
+// ── Calendar ──────────────────────────────────────────────────────────────────
+const key=(y,m,d)=>`${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+const dget=k=>{if(!db[k])db[k]={glow:0,notes:[]};return db[k];};
 function renderDOW(){
   const row=document.getElementById('dwr');row.innerHTML='';
   DS.forEach(d=>{const s=document.createElement('div');s.textContent=d;row.appendChild(s);});
 }
-
 function render(){
   document.getElementById('ml').textContent=`${MN[cm]} ${cy}`;
   const gr=document.getElementById('cgr');gr.innerHTML='';
-  const tk=key(new Date().getFullYear(),new Date().getMonth(),new Date().getDate());
+  const lv=LV(),tk=key(new Date().getFullYear(),new Date().getMonth(),new Date().getDate());
   const fd=new Date(cy,cm,1).getDay(),off=fd===0?6:fd-1,tot=new Date(cy,cm+1,0).getDate();
   for(let i=0;i<off;i++)gr.appendChild(document.createElement('div'));
   for(let d=1;d<=tot;d++){
-    const dk=key(cy,cm,d),gi=(db[dk]||{}).glow||0,g=LV[gi];
+    const dk=key(cy,cm,d),gi=(db[dk]||{}).glow||0,g=lv[gi];
     const isT=dk===tk,isS=dk===sel;
-    const cell=document.createElement('div');cell.className='day-cell'+(isT?' today':'');
+    const cell=document.createElement('div');cell.className='dc'+(isT?' today':'');
     const dot=document.createElement('div');dot.className='dot';
-    dot.style.cssText=`width:${g.sz};height:${g.sz};background:${g.bg};box-shadow:${g.sh};${isS?'outline:1px solid rgba(255,255,255,0.18);outline-offset:2px;':''}${isT&&!isS?'outline:1px solid #1e1e1e;outline-offset:2px;':''}`;
-    const lb=document.createElement('div');lb.className='day-num';lb.textContent=d;
+    dot.style.cssText=`width:${g.sz};height:${g.sz};background:${g.bg};box-shadow:${g.sh};${isS?'outline:1px solid rgba(255,255,255,.2);outline-offset:2px;':''}${isT&&!isS?'outline:1px solid var(--bd2);outline-offset:2px;':''}`;
+    const lb=document.createElement('div');lb.className='dn';lb.textContent=d;
     cell.appendChild(dot);cell.appendChild(lb);
     cell.addEventListener('click',()=>{sel=dk;hTap();render();renderPanel();});
     gr.appendChild(cell);
   }
 }
-
 function renderPanel(){
-  const panel=document.getElementById('dp');
-  if(!sel){panel.style.display='none';return;}
-  panel.style.display='block';
+  const p=document.getElementById('dp');
+  if(!sel){p.style.display='none';return;}
+  p.style.display='block';
   const[y,m,d]=sel.split('-').map(Number);
-  const dt=new Date(y,m-1,d);
-  document.getElementById('pdt').textContent=`${d} ${MN[m-1].toLowerCase()} ${y}, ${DN[dt.getDay()]}`;
-  da=SN[dd2(sel).glow||0];applyDial(da,true);
+  document.getElementById('pdt').textContent=`${d} ${MN[m-1].toLowerCase()} ${y}, ${DN[new Date(y,m-1,d).getDay()]}`;
+  da=SN[dget(sel).glow||0];applyDial(da,true);
   renderNotes();document.getElementById('ni').value='';
 }
-
 function renderNotes(){
   if(!sel)return;
-  const data=dd2(sel),list=document.getElementById('nl');list.innerHTML='';
-  const gi=data.glow||0,dotBg=gi>0?LV[gi].bg:'#222';
-  if(!data.notes?.length){
-    const e=document.createElement('div');e.className='nempty';e.textContent='Ещё ничего не записано';list.appendChild(e);return;
-  }
+  const data=dget(sel),list=document.getElementById('nl');list.innerHTML='';
+  const lv=LV(),gi=data.glow||0,dotBg=gi>0?lv[gi].bg:(theme==='light'?'#ccc':'#222');
+  if(!data.notes?.length){const e=document.createElement('div');e.className='nem';
+    e.textContent='Ещё ничего не записано';list.appendChild(e);return;}
   data.notes.forEach((t,i)=>{
     const row=document.createElement('div');row.className='nr';
-    const dot=document.createElement('div');dot.className='nd';dot.style.background=dotBg;
+    const dot=document.createElement('div');dot.className='ndo';dot.style.background=dotBg;
     const txt=document.createElement('div');txt.className='nt';txt.textContent=t;
     const del=document.createElement('button');del.className='ndel';del.textContent='×';
-    del.addEventListener('click',async()=>{hTap();data.notes.splice(i,1);await saveData();render();renderNotes();});
+    del.addEventListener('click',()=>{hTap();data.notes.splice(i,1);persist(SK.c,db);render();renderNotes();});
     row.appendChild(dot);row.appendChild(txt);row.appendChild(del);list.appendChild(row);
   });
 }
-
 async function addNote(){
-  const inp=document.getElementById('ni');
-  const v=inp.value.trim();if(!v||!sel)return;
-  const data=dd2(sel);if(data.notes.length>=15)return;
-  data.notes.push(v);await saveData();hNote();render();renderNotes();inp.value='';inp.focus();
+  const inp=document.getElementById('ni'),v=inp.value.trim();if(!v||!sel)return;
+  const d=dget(sel);if(d.notes.length>=15)return;
+  d.notes.push(v);persist(SK.c,db);hNote();render();renderNotes();inp.value='';inp.focus();
 }
 
-// hint toggle
-document.getElementById('hint-btn').addEventListener('click',()=>{
-  const p=document.getElementById('hint-panel');
-  const open=p.classList.toggle('open');
-  document.getElementById('hint-btn').textContent=open?'скрыть':'как это работает?';
-  hTap();
-});
+// ── Tabs ──────────────────────────────────────────────────────────────────────
+function switchTab(t){
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(b=>b.classList.remove('active'));
+  document.getElementById('v'+t).classList.add('active');
+  document.getElementById('tab-'+t).classList.add('active');
+  if(t==='todo')renderTodos();
+}
+document.getElementById('tab-cal').addEventListener('click',()=>{switchTab('cal');hTap();});
+document.getElementById('tab-todo').addEventListener('click',()=>{switchTab('todo');hTap();});
 
-document.getElementById('pb').addEventListener('click',()=>{cm--;if(cm<0){cm=11;cy--;}hTap();sel=null;document.getElementById('dp').style.display='none';render();});
-document.getElementById('nb').addEventListener('click',()=>{cm++;if(cm>11){cm=0;cy++;}hTap();sel=null;document.getElementById('dp').style.display='none';render();});
-document.getElementById('xb').addEventListener('click',()=>{sel=null;document.getElementById('dp').style.display='none';render();});
-document.getElementById('ab').addEventListener('click',addNote);
-document.getElementById('ni').addEventListener('keydown',e=>{if(e.key==='Enter')addNote();});
-
-renderDOW();initDial();
-loadData().then(()=>render());
-</script>
-</body>
-</html>
+// ── Todo ──────────────────────────────────────────────────────────────────────
+let drag
